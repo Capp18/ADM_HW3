@@ -1,13 +1,29 @@
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
-
+import nltk
+import pandas as pd
+from nltk.tokenize import word_tokenize, RegexpTokenizer
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import string
 columns = ["title", "intro", "plot", "film_name", "director", "producer", "writer", "starring", "music", "release_date","running time", "country", "language", "budget"]
 a = np.empty((10000, 14,))
 a[:] = np.nan
 df = pd.DataFrame(data=a, columns=columns)
 
-for film in range(10): # the index should be the number of the total files here 10 is just for quick trial :
+def clean_text(sentence):
+    stop_words = set(stopwords.words("english"))
+    tokens = RegexpTokenizer(r"\w+")
+    porter = PorterStemmer()
+    stem_words = list(map(porter.stem, tokens.tokenize(sentence)))
+    words = filter(lambda x: x not in string.punctuation, stem_words)
+    cleaned_text = filter(lambda x: x not in stop_words, words)
+    return " ".join(list(cleaned_text))
+
+for film in range(10000): # the index should be the number of the total files here 10 is just for quick trial :
+    if film in [9429, 9671]:
+        continue
     soup = BeautifulSoup(open("movies\\article_"+str(film)+".html", encoding="utf8"), "html.parser")
     #exctract the title
     df.iloc[film, 0] = soup.find("h1").text
@@ -19,7 +35,8 @@ for film in range(10): # the index should be the number of the total files here 
         if par.name == "p":
             Intro += par.get_text()
         par = par.next_element
-    df.iloc[film, 1] = Intro
+    # clean it with clean text function
+    df.iloc[film, 1] = clean_text(Intro)
 
     # Parse the Plot
     for heading in soup.find_all(["h2", "h3"]):
@@ -29,14 +46,14 @@ for film in range(10): # the index should be the number of the total files here 
                     heading.contents[0].get("id") == "Premise"): # first find the plot heading
                 break
         except AttributeError:
-            continue
+            pass
     Plot = ""
     try:
         while heading.next_element.name != "h2" and heading.next_element.name != "h3": # starting from plot heading, concatanete all paragraphs
             if heading.name == "p":
                 Plot += heading.get_text()
             heading = heading.next_element
-        df.iloc[film, 2] = Plot
+        df.iloc[film, 2] = clean_text(Plot)
     except AttributeError:
         pass
 
@@ -44,6 +61,7 @@ for film in range(10): # the index should be the number of the total files here 
 
     info_box = soup.find("table", {"class": "infobox vevent"})
     if info_box is None:
+        df.iloc[film, :].to_csv("parsed_clean\\" + str(film) + ".tsv", sep='\t', encoding='utf-8')
         continue
     tags = info_box.contents[0].contents # find tags in infobox
     for tr in tags:
@@ -67,7 +85,9 @@ for film in range(10): # the index should be the number of the total files here 
             else:
                 df.iloc[film, i] = [tr.contents[1].get_text()]
 
-    df.iloc[film, :].to_csv("parsed\\"+str(film)+".tsv", sep='\t', encoding='utf-8') # create a different folder called parsed and save the tsv files in it
+
+
+    df.iloc[film, :].to_csv("parsed_clean\\"+str(film)+".tsv", sep='\t', encoding='utf-8') # create a different folder called parsed and save the tsv files in it
 
 
 #df.iloc[0,:].to_excel("parsed\\parsing.xlsx")
