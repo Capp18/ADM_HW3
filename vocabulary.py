@@ -10,6 +10,5 @@ for film in range(10000): # the index should be the number of the total files he
     text = text + " " + intro + " " + plot
 
 arr = set(text.split())
-
 vocab = pd.DataFrame(arr)
 vocab.to_csv("vocab.csv")

@@ -19,7 +19,7 @@ def clean_text(sentence):
     stem_words = list(map(porter.stem, tokens.tokenize(sentence)))
     words = filter(lambda x: x not in string.punctuation, stem_words)
     cleaned_text = filter(lambda x: x not in stop_words, words)
-    return " ".join(list(cleaned_text))
+    return cleaned_text
 
 for film in range(10000): # the index should be the number of the total files here 10 is just for quick trial :
     if film in [9429, 9671]:
@@ -36,7 +36,7 @@ for film in range(10000): # the index should be the number of the total files he
             Intro += par.get_text()
         par = par.next_element
     # clean it with clean text function
-    df.iloc[film, 1] = clean_text(Intro)
+    df.iloc[film, 1] = " ".join(list(clean_text(Intro)))
 
     # Parse the Plot
     for heading in soup.find_all(["h2", "h3"]):
@@ -53,7 +53,7 @@ for film in range(10000): # the index should be the number of the total files he
             if heading.name == "p":
                 Plot += heading.get_text()
             heading = heading.next_element
-        df.iloc[film, 2] = clean_text(Plot)
+        df.iloc[film, 2] = " ".join(list(clean_text(Plot)))
     except AttributeError:
         pass
 
