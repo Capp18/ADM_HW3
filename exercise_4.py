@@ -11,4 +11,3 @@ def maxsize_pal_subStrings(s):
       
 s=input()
 print((maxsize_pal_subStrings(s)))
-
