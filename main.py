@@ -58,4 +58,72 @@ for document in intersection:
     counter += 1
 
 print(results)
+############################################################################################################
+#SEARCH ENGINE 2 (NOT COMPLETED)
+from nltk.tokenize import word_tokenize, RegexpTokenizer
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import json
+from sklearn.feature_extraction.text import TfidfVectorizer
 
+with open('C:/Users/Capp/Documents/Università/Magistrale/1-ADM/Homework3/inverted_indices_score.json', "r") as f:  # Just use 'w' mode in 3.x
+    inverted_indices=json.load(f)
+sentence=input()
+def clean_text(sentence):
+    stop_words = set(stopwords.words("english"))
+    tokens = RegexpTokenizer(r"\w+")
+    porter = PorterStemmer()
+    stem_words = list(map(porter.stem, tokens.tokenize(sentence)))
+    words = filter(lambda x: x not in string.punctuation, stem_words)
+    cleaned_text = filter(lambda x: x not in stop_words, words)
+    return string
+
+query={}
+vectorizer=TfidfVectorizer()
+v=vectorizer.fit_transform(string)
+for i in range(len(string)):
+    query[string[i]]=''.join((str(v[i])[3:-5]).split())
+##
+l=[]
+for el in string:
+    se=set()
+    for i in range(len(inverted_indices[el])):
+        se=se|{inverted_indices[el][i][0]}
+    l.append(se)
+docs=l[0]
+for i in range(1,len(l)):
+    docs=docs&l[i-1]
+
+n={}
+d1={}
+d2={}
+for doc in docs:
+    for el in string:
+        query[el]='0.'+query[el][2:len(query[el])]
+        y=float(query[el])
+        for i in range(len((inverted_indices[el]))):
+            if inverted_indices[el][i][0]==doc:
+                inv='0.'+inverted_indices[el][i][1][2:len(inverted_indices[el][i][1])]
+                x=float(inv)
+                if inverted_indices[el][i][0] not in n:
+                    n[inverted_indices[el][i][0]]=(x*y)
+                else:
+                    n[inverted_indices[el][i][0]]+=(x*y) #Summation of numerator
+                ##
+                if inverted_indices[el][i][0] not in d1:
+                    d1[inverted_indices[el][i][0]]=x**2
+                else:
+                    d1[inverted_indices[el][i][0]]+=x**2 #summation of first part denominator
+                ##
+                if inverted_indices[el][i][0] not in d2:
+                    d2[inverted_indices[el][i][0]]=y**2
+                else:
+                    d2[inverted_indices[el][i][0]]+=y**2 #summation of second part denominator
+            else:
+                pass
+results={}  #A dictionary with all documents and relatives cosine similarity values
+for el in n:
+    try:
+        results[el]=(n[el])/((d1[el])**(1/2))*((d2[el])**(1/2))
+    except ZeroDivisionError:
+        continue
