@@ -31,10 +31,6 @@ for film in range(9999):
                 pass
         except KeyError:
             continue
-import csv
-with open('C:/Users/Capp/Documents/Università/Magistrale/1-ADM/Homework3/inverted_indices.csv', "w") as f:  # Just use 'w' mode in 3.x
-    w = csv.DictWriter(f, inverted_indices.keys())
-    w.writeheader()
-    w.writerow(inverted_indices)
-    
-op=pd.read_csv("inverted_indices.csv").transpose()
+import json
+with open('C:/Users/Capp/Documents/Università/Magistrale/1-ADM/Homework3/inverted_indices.json', "w") as f:  # Just use 'w' mode in 3.x
+    json.dump(inverted_indices, f)
